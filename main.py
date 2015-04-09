@@ -1,4 +1,5 @@
 import pygame
+import GameHandler
 
 # Constants
 screen_size = (500, 500)
@@ -20,6 +21,7 @@ pygame.display.set_caption("Snake Game")
 
 # Initialize the screen
 game_screen = pygame.display.set_mode(screen_size, screen_flags, screen_depth)
+game_handler = GameHandler.GameHandler(game_screen)
 
 # Create the game clock
 game_clock = pygame.time.Clock()
