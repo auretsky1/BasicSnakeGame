@@ -10,8 +10,6 @@ class SnakePortion(pygame.sprite.Sprite):
         self.y_position = y_position
         self.segment_width = segment_width
         self.segment_height = segment_height
-        self.speed = 10
-        self.speed_countdown = self.speed
         self.direction = 1
         self.reset = reset
 
@@ -23,9 +21,11 @@ class SnakePortion(pygame.sprite.Sprite):
         self.rect.x = x_position * segment_width
         self.rect.y = y_position * segment_height
 
-    def update(self, game_screen, *args):
-        self.speed_countdown -= 1
-        if self.speed_countdown == 0:
+        # Special variable that holds the next piece in the snake line
+        self.next_portion = None  # Initialize this to none always, handled by the SnakeHandler object
+
+    def update(self, *args):
+        if args[1] == 0:
             if self.direction == 0:
                 self.y_position -= 1
 
@@ -38,30 +38,35 @@ class SnakePortion(pygame.sprite.Sprite):
             elif self.direction == 3:
                 self.x_position -= 1
 
+            # Stop moving
+            elif self.direction == 4:
+                return
+
             self.rect.x = self.x_position * self.segment_width
             self.rect.y = self.y_position * self.segment_height
-            self.speed_countdown = self.speed
+            self.eat_food(args[0], args[1])
 
-        if self.x_position <= 0 or self.x_position >= game_screen.get_width():
+        if self.x_position < 0 or self.x_position >= 50:
             self.stop_moving(1)
 
-        if self.y_position <= 0 or self.y_position >= game_screen.get_height():
+        if self.y_position < 0 or self.y_position >= 50:
             self.stop_moving(1)
-
-
 
     def change_direction(self, direction):
         self.direction = direction
 
+    def eat_food(self, food, speed_countdown):
+        if pygame.sprite.collide_rect(self, food):
+            food.eaten(speed_countdown, food)
+
     def stop_moving(self, reset):
         self.reset = reset
-        self.speed_countdown += 1
+        self.direction = 4
 
     def reset_game(self):
         self.x_position = 5
         self.y_position = 5
         self.reset = 0
-        self.speed_countdown -= 1
 
     def game_object_draw(self):
         pass

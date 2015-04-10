@@ -1,0 +1,5 @@
+TODO List
+==============
+> Fix problem with snake growth and direction propagation
+> Fix reset/countdown in game_over handling
+> Clean up argument requirements especially for growth call
