@@ -32,13 +32,17 @@ while is_game_running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             is_game_running = False
+        if event.type == pygame.KEYDOWN:
+            game_handler.process_event(event)
 
     # Do game logic
+    game_handler.game_logic()
 
     # Clear the screen
     game_screen.fill(screen_clear_color)
 
     # Draw game objects
+    game_handler.draw_game_objects()
 
     # Draw the screen
     pygame.display.flip()
