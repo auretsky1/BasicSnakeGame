@@ -3,18 +3,21 @@ import GameHandler
 
 
 class SnakePortion(pygame.sprite.Sprite):
+
+    # Constructor
     def __init__(self, game_screen, segment_width, segment_height, x_position, y_position, reset):
-        # snakeportion constructor
+        # Instance variables for this object
         self.game_screen = game_screen
         self.x_position = x_position
         self.y_position = y_position
         self.segment_width = segment_width
         self.segment_height = segment_height
         self.direction = 1
-        self.reset = reset
 
-        # calls upon Sprite constructor
+        # Call the parent class's constructor
         super().__init__()
+
+        # Set variables pertaining to the Sprite class
         self.image = pygame.Surface([self.segment_width, self.segment_height])
         self.image.fill((255, 255, 255))
         self.rect = self.image.get_rect()
@@ -22,51 +25,61 @@ class SnakePortion(pygame.sprite.Sprite):
         self.rect.y = y_position * segment_height
 
         # Special variable that holds the next piece in the snake line
-        self.next_portion = None  # Initialize this to none always, handled by the SnakeHandler object
+        self.next_portion = None  # Initialized to none as we assume new pieces always on tail
 
+    # Update the snake portion object
     def update(self, *args):
-        if args[1] == 0:
-            if self.direction == 0:
-                self.y_position -= 1
+        if self.direction == 0:
+            self.y_position -= 1
 
-            elif self.direction == 1:
-                self.x_position += 1
+        elif self.direction == 1:
+            self.x_position += 1
 
-            elif self.direction == 2:
-                self.y_position += 1
+        elif self.direction == 2:
+            self.y_position += 1
 
-            elif self.direction == 3:
-                self.x_position -= 1
+        elif self.direction == 3:
+            self.x_position -= 1
 
-            # Stop moving
-            elif self.direction == 4:
-                return
+        self.rect.x = self.x_position * self.segment_width
+        self.rect.y = self.y_position * self.segment_height
 
-            self.rect.x = self.x_position * self.segment_width
-            self.rect.y = self.y_position * self.segment_height
-            self.eat_food(args[0], args[1])
-
-        if self.x_position < 0 or self.x_position >= 50:
-            self.stop_moving(1)
-
-        if self.y_position < 0 or self.y_position >= 50:
-            self.stop_moving(1)
-
+    # Simple setter method that changes the direction of this snake portion
     def change_direction(self, direction):
         self.direction = direction
 
-    def eat_food(self, food, speed_countdown):
-        if pygame.sprite.collide_rect(self, food):
-            food.eaten(speed_countdown, food)
+    # Grow the snake by one unit positioning it behind the tail opposite to it's moving direction
+    def grow(self):
+        # First determine the direction from the tail where the piece should be added
+        add_direction = self.direction + 2  # Slide two direction to get the opposite direction
+        if add_direction > 3:  # Required for down and left which would be 4/5 respectively
+            add_direction = ((add_direction % 3) - 1)  # Use clock arithmetic to get real values
 
-    def stop_moving(self, reset):
-        self.reset = reset
-        self.direction = 4
+        # Next determine the actual positions by the direction calculated above
+        if add_direction == 0:  # Should appear one above the tail
+            x_position = self.x_position
+            y_position = self.y_position - 1
+        elif add_direction == 1:  # Should appear to the right of the tail
+            x_position = self.x_position + 1
+            y_position = self.y_position
+        elif add_direction == 2:  # Should appear below the tail
+            x_position = self.x_position
+            y_position = self.y_position + 1
+        elif add_direction == 3:  # Should appear to the left of the tail
+            x_position = self.x_position - 1
+            y_position = self.y_position
 
-    def reset_game(self):
-        self.x_position = 5
-        self.y_position = 5
-        self.reset = 0
+        # Create the new SnakePortion object using the above calculated positions
+        new_portion_of_snake = self.__class__(self.game_screen,
+                                                         self.segment_width,
+                                                         self.segment_height,
+                                                         x_position, y_position, 0)
 
-    def game_object_draw(self):
-        pass
+        # Set the initial direction of the new portion to follow the snake
+        new_portion_of_snake.change_direction(self.direction)
+
+        # Make the tail (self) point to the new tail
+        self.next_portion = new_portion_of_snake
+
+        # Return the new snake piece to the caller
+        return new_portion_of_snake
