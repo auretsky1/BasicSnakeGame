@@ -11,6 +11,7 @@ class GameHandler(object):
         self.game_screen = game_screen
         self.all_game_sprites = pygame.sprite.Group()
         self.snake_sprites = pygame.sprite.Group()
+        self.snake_tails = pygame.sprite.Group()
         self.game_text = []
         self.speed = 5
         self.speed_countdown = self.speed
@@ -21,11 +22,12 @@ class GameHandler(object):
         center_width = game_screen.get_width() / 2
         center_height = game_screen.get_height() / 2
         self.game_ended = 0  # Has the game ended?
-
         # Setup the initial condition of the snake (just the head w/ tail pointing to the head)
         self.snake_head = SnakePortion.SnakePortion(game_screen, self.unit_width, self.unit_height, 5, 5, 0)
         self.snake_tail = self.snake_head
         self.snake_sprites.add(self.snake_head)
+        self.speed_decay = 1
+        self.mod_change = 6
 
         # Create a sprite that will contain the food object
         self.food = SnakeFood.SnakeFood(game_screen, unit_dimensions, 10, 10, unit_count, self.snake_sprites)
@@ -52,11 +54,12 @@ class GameHandler(object):
         if self.game_ended == 1:
             return
 
+
         # Update the speed countdown
-        self.speed_countdown -= 1
+        self.speed_countdown -= self.speed_decay
 
         # Process the snake sprites if the countdown has reached 0
-        if self.speed_countdown == 0:
+        if self.speed_countdown <= 0:
             # Take the users most recent input into account if the game hasn't ended
             if self.user_input is not None:
                 # Only process direction change is snake isn't already moving in that direction
@@ -92,9 +95,11 @@ class GameHandler(object):
                 # Set the tail to be the new portion of the snake
                 self.snake_tail = new_snake_portion
 
-                # Add the snake portion to the snake_portion group and master group
+                # Add the snake portion to the snake_portion group, tail/body group, master group
+                self.snake_tails.add(new_snake_portion)
                 self.snake_sprites.add(new_snake_portion)
                 self.all_game_sprites.add(new_snake_portion)
+
 
             # Check if the snake has collided with any of the walls and if so reset the game
             if self.snake_head.x_position < 0 or self.snake_head.x_position >= 50:
@@ -105,6 +110,16 @@ class GameHandler(object):
                 self.end_game()  # Call the game over routine
             elif 1 == 0:  # Add the check for collision against the snake body here
                 pass
+
+
+            # Check if the snake has collided with any of its pieces
+            if pygame.sprite.spritecollideany(self.snake_head, self.snake_tails):
+                self.game_ended = 1 # Set game over flag
+                self.end_game()     # Call the game over routine
+
+            # changes speed_decay
+            if len(self.snake_sprites) % self.mod_change == 0:
+                self.change_difficulty()
 
             # Reset the speed countdown if it's at 0
             self.speed_countdown = self.speed
@@ -117,16 +132,25 @@ class GameHandler(object):
         # Second remove all the snake sprites from the snake sprites/master sprites list
         self.all_game_sprites.remove(self.snake_sprites)  # Remove the snake sprites from the master list
         self.snake_sprites.empty()  # Remove the snake sprites from the snake list
-
+        self.snake_tails.empty() # Remove the snake sprites from the body/tail list
         # Next clear the direction changes list
         self.direction_changes.clear()
+
+    def change_difficulty(self):
+        # change speed of snake
+            self.speed_decay += .5
+            self.mod_change += 5
+
 
     def reset_game(self):
         self.snake_head = SnakePortion.SnakePortion(self.game_screen, self.unit_width, self.unit_height, 5, 5, 0)
         self.snake_tail = self.snake_head
         self.snake_sprites.add(self.snake_head)
         self.all_game_sprites.add(self.snake_head)
+        self.speed_decay = 1
+        self.mod_change = 2
         self.game_ended = 0
+
 
     def draw_game_objects(self):
         self.all_game_sprites.draw(self.game_screen)

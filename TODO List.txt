@@ -1,4 +1,3 @@
 TODO List
 ==============
-> Add snake collision with itself
 > Make the snake speed up as you do better
